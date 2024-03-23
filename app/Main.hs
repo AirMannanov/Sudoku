@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Lib (Grid, setSudoku, runSudoku, solveSudoku, printGrid)
-
+import Interface (interface)
 
 checkInputChoiceLvl :: String -> Bool
 checkInputChoiceLvl sym = elem sym ["s", "m", "h"] 
@@ -47,9 +47,11 @@ choicePlay grid = do
 
 main :: IO ()
 main = do
+
     grid <- choiceLvl
-    
+
     putStrLn "Your field"
+    interface grid
     printGrid grid
 
     choicePlay grid

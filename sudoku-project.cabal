@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Interface
       Lib
   other-modules:
       Paths_sudoku_project
@@ -35,6 +36,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , gloss
   default-language: Haskell2010
 
 executable sudoku-project-exe
@@ -48,6 +50,7 @@ executable sudoku-project-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , gloss
     , sudoku-project
   default-language: Haskell2010
 
@@ -63,5 +66,6 @@ test-suite sudoku-project-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , gloss
     , sudoku-project
   default-language: Haskell2010

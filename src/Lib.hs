@@ -1,4 +1,4 @@
-module Lib (Grid, setSudoku, runSudoku, solveSudoku, printGrid)
+module Lib (Grid, Row, Cell, setSudoku, runSudoku, solveSudoku, printGrid)
     where
 
 
