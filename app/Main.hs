@@ -56,6 +56,6 @@ main = do
 
     putStrLn "Your field"
     interface grid
-    printGrid grid
+    -- printGrid grid
 
-    choicePlay grid
+    -- choicePlay grid

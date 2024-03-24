@@ -4,11 +4,11 @@ module Const (
     steps
     ) where
 
-import Graphics.Gloss
+import Graphics.Gloss ( Display(InWindow), Color, white )
 
 
 window :: Display
-window = InWindow "Sudoku" (1000, 800) (1100, 100)
+window = InWindow "Sudoku" (1200, 800) (500, 100)
 
 background :: Color
 background = white
