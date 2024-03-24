@@ -2,7 +2,10 @@ module Lib (
     setSudoku, 
     runSudoku, 
     solveSudoku, 
-    printGrid
+    printGrid,
+    checkCell,
+    deleteCell,
+    fillCell
     ) where
 
 
