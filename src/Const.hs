@@ -1,6 +1,7 @@
 module Const (
     window, 
-    background
+    background,
+    steps
     ) where
 
 import Graphics.Gloss
@@ -11,3 +12,6 @@ window = InWindow "Sudoku" (800, 800) (1100, 100)
 
 background :: Color
 background = white
+
+steps :: Int
+steps = 10

@@ -3,9 +3,9 @@ module Interface (interface)
 
 import Data.Maybe (catMaybes)
 import Graphics.Gloss
-import Const ( window, background)
-import Types ( Grid, Row )
-
+import Const ( window, background, steps )
+import Types ( Grid, Row, GameState(..) )
+import Graphics.Gloss.Interface.Pure.Game (Event)
 
 
 drawNumber :: Int -> Picture
@@ -21,7 +21,7 @@ drawNumbers nums coords = moveNums $ zip (map drawNumber nums) coords
             map (moveNum 1) list
 
         moveNum :: Float -> (Picture, Point) -> Picture
-        moveNum num (pict, (x, y)) = translate (73 + 70*x) (68 + num + 70*y) pict
+        moveNum num (pict, (x, y)) = translate (-328 + 78*x) (-333 + num + 78*y) pict
 
 drawingField :: Grid -> [Picture]
 drawingField grid = drawNumbers getNumbers getCoords
@@ -40,16 +40,24 @@ drawingField grid = drawNumbers getNumbers getCoords
 
 drawingGrid :: [Picture]
 drawingGrid =
-    map (line . (\ x -> [(x, 50), (x, 680)])) (take 10 [50, 120..]) ++
-    map (line . (\ x -> [(50, x), (680, x)])) (take 10 [50, 120..]) ++
-    map (line . (\ x -> [(x-1, 50), (x-1, 680)])) (take 4 [50, 260..]) ++
-    map (line . (\ x -> [(x+1, 50), (x+1, 680)])) (take 4 [50, 260..]) ++
-    map (line . (\ x -> [(50, x-1), (680, x-1)])) (take 4 [50, 260..]) ++
-    map (line . (\ x -> [(50, x+1), (680, x+1)])) (take 4 [50, 260..])
+    map (line . (\ x -> [(x, 351), (x, -351)])) (take 10 [-351, -273..]) ++
+    map (line . (\ x -> [(351, x), (-351, x)])) (take 10 [-351, -273..])  ++
+    map (line . (\ x -> [(x-1, 351), (x-1, -351)])) (take 4 [-351, -117..]) ++
+    map (line . (\ x -> [(x+1, 351), (x+1, -351)])) (take 4 [-351, -117..]) ++
+    map (line . (\ x -> [(351, x-1), (-351, x-1)])) (take 4 [-351, -117..]) ++
+    map (line . (\ x -> [(351, x+1), (-351, x+1)])) (take 4 [-351, -117..])
 
-drawing :: Grid -> Picture
-drawing grid = pictures $ drawingGrid ++ drawingField grid
+drawing :: GameState -> Picture
+drawing (GameState grid) = pictures $ drawingGrid ++ drawingField grid
 
+zeroState :: Grid -> GameState
+zeroState = GameState
+
+event :: Event -> GameState -> GameState
+event _ gameState = gameState
+
+update :: Float -> GameState -> GameState
+update 0.1 gameState = gameState
 
 interface :: Grid ->  IO ()
-interface grid = display window background (drawing grid)
+interface grid = play window background steps (zeroState grid) drawing event update
