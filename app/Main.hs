@@ -1,7 +1,11 @@
 module Main (main) where
 
-import Lib (Grid, setSudoku, runSudoku, solveSudoku, printGrid)
+
+import Lib (setSudoku, runSudoku, solveSudoku, printGrid)
 import Interface (interface)
+import Types (Grid)
+
+
 
 checkInputChoiceLvl :: String -> Bool
 checkInputChoiceLvl sym = elem sym ["s", "m", "h"] 

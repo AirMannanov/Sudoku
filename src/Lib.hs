@@ -1,17 +1,16 @@
-module Lib (Grid, Row, Cell, setSudoku, runSudoku, solveSudoku, printGrid)
-    where
+module Lib (
+    setSudoku, 
+    runSudoku, 
+    solveSudoku, 
+    printGrid
+    ) where
 
 
 
 import Data.List (sort)
 import Data.Char (digitToInt, intToDigit)
 import Data.Maybe (catMaybes, isNothing)
-
-
-type Cell = Maybe Int
-type Row = [Cell]
-type Grid = [Row]
-
+import Types
 
 
 printGrid :: Grid -> IO ()
@@ -160,13 +159,13 @@ runSudoku grid = do
 
 
 getNothingCell :: Grid -> [(Int, Int)]
-getNothingCell grid = map snd $ filter (\(bool, _) -> bool) $ zip bools arr
+getNothingCell grid = map snd $ filter fst $ zip bools arr
     where
         arr = [(i, j) | i <- [0..8], j <- [0..8]]
         bools = map (checkCellIsNothing grid) arr
 
 getAllowedNumbers :: Grid -> [((Int, Int), [Int])]
-getAllowedNumbers grid = zip coords $ map (getAllowedNumbersCoord) coords
+getAllowedNumbers grid = zip coords $ map getAllowedNumbersCoord coords
     where
         coords = getNothingCell grid
         getAllowedNumbersCoord :: (Int, Int) -> [Int]
@@ -176,8 +175,8 @@ getAllowedNumbers grid = zip coords $ map (getAllowedNumbersCoord) coords
 stepOfSolveSudoku :: Grid -> [((Int, Int), [Int])] -> (Grid, Bool)
 stepOfSolveSudoku grid [] = (grid, True) 
 stepOfSolveSudoku grid ((_, []): _) = (grid, False)
-stepOfSolveSudoku grid (((i, j), (num: nums)): xs) =
-    let suppGrid = (fillCell grid (i, j) num) 
+stepOfSolveSudoku grid (((i, j), num: nums): xs) =
+    let suppGrid = fillCell grid (i, j) num
     in case stepOfSolveSudoku suppGrid $ getAllowedNumbers suppGrid of
         (_, False) -> stepOfSolveSudoku grid (((i, j), nums): xs)
         cort -> cort
