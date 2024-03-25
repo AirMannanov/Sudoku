@@ -3,9 +3,11 @@ module Lib (
     runSudoku, 
     solveSudoku, 
     printGrid,
-    checkCell,
     deleteCell,
-    fillCell
+    fillCell,
+    checkCell,
+    checkCellIsNothing,
+    checkEndGame
     ) where
 
 
@@ -42,14 +44,14 @@ splitField field = map words $ lines field
 
 setMaybes :: [[String]] -> Grid
 setMaybes = map setRow
-  where
-    setRow :: [String] -> Row
-    setRow = map setCell
+    where
+        setRow :: [String] -> Row
+        setRow = map setCell
 
-    setCell :: String -> Cell
-    setCell sym
-      | sym == "." = Nothing
-      | otherwise = Just (digitToInt $ head sym)
+        setCell :: String -> Cell
+        setCell sym
+            | sym == "." = Nothing
+            | otherwise = Just (digitToInt $ head sym)
 
 setSudoku :: String -> IO Grid
 setSudoku nameFile = do
@@ -75,8 +77,16 @@ notElement num line = notElem num $ catMaybes line
 checkCellIsNothing :: Grid -> (Int, Int) -> Bool
 checkCellIsNothing grid (i, j) = isNothing $ grid !! i !! j
 
-checkCell :: Grid -> (Int, Int) -> Int -> Bool
-checkCell grid (i, j) num =
+checkCell :: Grid -> (Int, Int) -> Bool
+checkCell grid (i, j) =
+    length (filter (== num) $ getRow grid i) <= 1 &&  
+    length (filter (== num) $ getColumn grid j) <= 1 &&  
+    length (filter (== num) $ getSquare grid (i, j)) <= 1
+        where
+            num = grid !! i !! j
+
+checkCellPaste :: Grid -> (Int, Int) -> Int -> Bool
+checkCellPaste grid (i, j) num =
     checkCellIsNothing grid (i, j) &&
     notElement num (getRow grid i) &&
     notElement num (getColumn grid j) &&
@@ -136,7 +146,7 @@ runSudoku grid = do
                 putStrLn "Enter the possition (i, j) and the number from 1 to 9"
                 line <- getLine
                 if checkInput line then do
-                    if checkCell grid (getPossition line) (getNumber line) then do
+                    if checkCellPaste grid (getPossition line) (getNumber line) then do
                         runSudoku $ fillCell grid (getPossition line) (getNumber line)
                     else do
                         putStrLn "Error: This number cannot be in this possition"
@@ -172,7 +182,7 @@ getAllowedNumbers grid = zip coords $ map getAllowedNumbersCoord coords
     where
         coords = getNothingCell grid
         getAllowedNumbersCoord :: (Int, Int) -> [Int]
-        getAllowedNumbersCoord coord = filter (checkCell grid coord) [1..9]
+        getAllowedNumbersCoord coord = filter (checkCellPaste grid coord) [1..9]
 
 
 stepOfSolveSudoku :: Grid -> [((Int, Int), [Int])] -> (Grid, Bool)

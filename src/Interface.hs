@@ -6,15 +6,16 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Const ( window, background, steps )
 import Types ( Grid, Row, GameState(..) )
-import Lib ( fillCell, deleteCell )
+import Lib ( fillCell, deleteCell, checkCellIsNothing, checkCell )
 
 
 
 drawNumber :: Int -> Picture
 drawNumber n = scale 0.35 0.35 $ text (show n)
 
-drawNumbers :: [Int] -> [Point] -> [Picture]
-drawNumbers nums coords = moveNums $ zip (map drawNumber nums) coords
+
+drawNumbers :: Grid -> [Int] -> [Point] -> [Picture]
+drawNumbers grid nums coords = moveNums $ zip (map drawNumber nums) coords
     where
         moveNums :: [(Picture, Point)] -> [Picture]
         moveNums list =
@@ -22,23 +23,28 @@ drawNumbers nums coords = moveNums $ zip (map drawNumber nums) coords
             map (moveNum 0) list ++
             map (moveNum 1) list
 
+
         moveNum :: Float -> (Picture, Point) -> Picture
-        moveNum num (pict, (x, y)) = translate (-528 + 78*x) (-333 + num + 78*y) pict
+        moveNum num (pict, (x, y)) = if checkCell grid (round x, round y) then
+                translate (-526 + 78*y) (293 + num - 78*x) pict
+            else
+                translate (-526 + 78*y) (293 + num - 78*x) $ color red pict
 
 drawingField :: Grid -> [Picture]
-drawingField grid = drawNumbers getNumbers getCoords
+drawingField grid = drawNumbers grid getNumbers getCoords
     where
         getNumbers :: [Int]
-        getNumbers = concatMap catMaybes (reverse grid)
+        getNumbers = concatMap catMaybes grid
 
         getCoords :: [Point]
         getCoords = concatMap
-            (\ (i, list) -> map (\ j -> (j, i)) list) $
+            (\ (i, list) -> map (\ j -> (i, j)) list) $
             zip [0..] $
-            map suppFun $ reverse grid
+            map suppFun grid
 
         suppFun :: Row -> [Float]
         suppFun row =  map fst $ filter (\ (_, cell) -> cell /= Nothing) $ zip [0..] row
+
 
 drawingGrid :: [Picture]
 drawingGrid =
@@ -60,7 +66,7 @@ drawButtons =
     translate 267 (-342) $ scale 0.8 0.8 $ text "Clear",
     translate 268 (-341) $ scale 0.8 0.8 $ text "Clear",
     translate 266 (-341) $ scale 0.8 0.8 $ text "Clear"
-  ] ++ 
+  ] ++
   zipWith (\(x, y) z -> translate x y $ scale 2.8 2.8 $ drawNumber z) [(x, y) | y <- [5, -117, -239], x <- [219, 341, 463]] [1..] ++
   zipWith (\(x, y) z -> translate (x + 1) y $ scale 2.8 2.8 $ drawNumber z) [(x, y) | y <- [5, -117, -239], x <- [219, 341, 463]] [1..] ++
   zipWith (\(x, y) z -> translate (x - 1) y $ scale 2.8 2.8 $ drawNumber z) [(x, y) | y <- [5, -117, -239], x <- [219, 341, 463]] [1..] ++
@@ -73,9 +79,13 @@ chosenCell coords = [translate x y $ color yellow $ rectangleSolid 77 77]
     where
         (x, y) = coords2Point coords
 
+drawStartCell :: [(Int, Int)] -> [Picture]
+drawStartCell = map ((\ (x, y) -> translate x y $ color (greyN 0.5) $ rectangleSolid 77 77) . coords2Point)
+
+
 drawing :: GameState -> Picture
-drawing (GameState grid _ Nothing) = pictures $ drawingGrid ++ drawingField grid ++ drawButtons
-drawing (GameState grid _ (Just coords)) = pictures $ chosenCell coords ++ drawingGrid ++ drawingField grid ++ drawButtons
+drawing (GameState grid startPoss _ Nothing) = pictures $ drawStartCell startPoss ++ drawingGrid ++ drawingField grid ++ drawButtons
+drawing (GameState grid startPoss _ (Just coords)) = pictures $ drawStartCell startPoss ++ chosenCell coords ++ drawingGrid ++ drawingField grid ++ drawButtons
 
 
 point2Coords :: Point -> (Int, Int)
@@ -86,29 +96,40 @@ coords2Point (y, x) = (78 * fromIntegral x - 512, -(78 * fromIntegral y - 311))
 
 
 zeroState :: Grid -> GameState
-zeroState grid = GameState grid (0, 0) Nothing
+zeroState grid = GameState grid getStartPossition (0, 0) Nothing
+    where
+        getStartPossition :: [(Int, Int)]
+        getStartPossition = filter (not . checkCellIsNothing grid) [(i, j) | i <- [0..8], j <- [0..8]]
 
-clickFill :: Grid -> Point -> Maybe (Int, Int) -> GameState
-clickFill grid (x, y) Nothing
-    | (-551 < x) && (x < 151) && (abs y < 351) = GameState grid (x, y) $ Just $ point2Coords (x, y)
-    | otherwise = GameState grid (x, y) Nothing
-clickFill grid (x, y) (Just point)
-    | (-551 < x) && (x < 151) && (abs y < 351) = GameState grid (x, y) $ Just $ point2Coords (x, y)
-    | (abs (x - 255) < 59)  && (abs (y - 54) < 59)  = GameState (fillCell grid point 1) (x, y) $ Just point 
-    | (abs (x - 377) < 59)  && (abs (y - 54) < 59)  = GameState (fillCell grid point 2) (x, y) $ Just point 
-    | (abs (x - 499) < 59)  && (abs (y - 54) < 59)  = GameState (fillCell grid point 3) (x, y) $ Just point 
-    | (abs (x - 255) < 59)  && (abs (y + 68) < 59)  = GameState (fillCell grid point 4) (x, y) $ Just point 
-    | (abs (x - 377) < 59)  && (abs (y + 68) < 59)  = GameState (fillCell grid point 5) (x, y) $ Just point 
-    | (abs (x - 499) < 59)  && (abs (y + 68) < 59)  = GameState (fillCell grid point 6) (x, y) $ Just point 
-    | (abs (x - 255) < 59)  && (abs (y + 190) < 59) = GameState (fillCell grid point 7) (x, y) $ Just point 
-    | (abs (x - 377) < 59)  && (abs (y + 190) < 59) = GameState (fillCell grid point 8) (x, y) $ Just point 
-    | (abs (x - 499) < 59)  && (abs (y + 190) < 59) = GameState (fillCell grid point 9) (x, y) $ Just point 
-    | (abs (x - 377) < 185) && (abs (y + 300) < 47) = GameState (deleteCell grid point) (x, y) $ Just point
-    | otherwise = GameState grid (x, y) $ Just point
+
+getCoordsCell :: [(Int, Int)] -> Point -> Maybe (Int, Int)
+getCoordsCell startCoords (x, y) =
+    if notElem coords startCoords then Just coords
+    else Nothing
+        where
+            coords = point2Coords (x, y)
+
+clickFill :: Grid -> [(Int, Int)] -> Point -> Maybe (Int, Int) -> GameState
+clickFill grid startPoss (x, y) Nothing
+    | (-551 < x) && (x < 151) && (abs y < 351) = GameState grid startPoss (x, y) $ getCoordsCell startPoss (x, y)
+    | otherwise = GameState grid startPoss (x, y) Nothing
+clickFill grid startPoss (x, y) (Just point)
+    | (-551 < x) && (x < 151) && (abs y < 351) = GameState grid startPoss (x, y) $ getCoordsCell startPoss (x, y)
+    | (abs (x - 255) < 59)  && (abs (y - 54) < 59)  = GameState (fillCell grid point 1) startPoss (x, y) $ Just point
+    | (abs (x - 377) < 59)  && (abs (y - 54) < 59)  = GameState (fillCell grid point 2) startPoss (x, y) $ Just point
+    | (abs (x - 499) < 59)  && (abs (y - 54) < 59)  = GameState (fillCell grid point 3) startPoss (x, y) $ Just point
+    | (abs (x - 255) < 59)  && (abs (y + 68) < 59)  = GameState (fillCell grid point 4) startPoss (x, y) $ Just point
+    | (abs (x - 377) < 59)  && (abs (y + 68) < 59)  = GameState (fillCell grid point 5) startPoss (x, y) $ Just point
+    | (abs (x - 499) < 59)  && (abs (y + 68) < 59)  = GameState (fillCell grid point 6) startPoss (x, y) $ Just point
+    | (abs (x - 255) < 59)  && (abs (y + 190) < 59) = GameState (fillCell grid point 7) startPoss (x, y) $ Just point
+    | (abs (x - 377) < 59)  && (abs (y + 190) < 59) = GameState (fillCell grid point 8) startPoss (x, y) $ Just point
+    | (abs (x - 499) < 59)  && (abs (y + 190) < 59) = GameState (fillCell grid point 9) startPoss (x, y) $ Just point
+    | (abs (x - 377) < 185) && (abs (y + 300) < 47) = GameState (deleteCell grid point) startPoss (x, y) $ Just point
+    | otherwise = GameState grid startPoss (x, y) $ Just point
 
 event :: Event -> GameState -> GameState
 event (EventMotion possition) gameState = gameState {mousePossition = possition}
-event (EventKey (MouseButton LeftButton) Down _ possition) (GameState grid _ coords) = clickFill grid possition coords
+event (EventKey (MouseButton LeftButton) Down _ possition) (GameState grid startPoss _ coords) = clickFill grid startPoss possition coords
 event _ gameState = gameState
 
 update :: Float -> GameState -> GameState

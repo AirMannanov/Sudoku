@@ -1,7 +1,7 @@
 module Main (main) where
 
 
-import Lib (setSudoku, runSudoku, solveSudoku, printGrid)
+import Lib (setSudoku)
 import Interface (interface)
 import Types (Grid)
 
@@ -29,24 +29,24 @@ choiceLvl = do
         choiceLvl
 
 
-checkInputChoicePlay :: String -> Bool
-checkInputChoicePlay sym = elem sym ["p", "s"]
+-- checkInputChoicePlay :: String -> Bool
+-- checkInputChoicePlay sym = elem sym ["p", "s"]
 
-choicePlay :: Grid -> IO ()
-choicePlay grid = do
-    putStrLn "What do you want?"
-    putStrLn "- Plasy by yourself (enter p)"
-    putStrLn "- See the solution  (enter s)"
+-- choicePlay :: Grid -> IO ()
+-- choicePlay grid = do
+--     putStrLn "What do you want?"
+--     putStrLn "- Plasy by yourself (enter p)"
+--     putStrLn "- See the solution  (enter s)"
     
-    input <- getLine
-    if checkInputChoicePlay input then
-        case input of
-            "p" -> runSudoku grid
-            "s" -> solveSudoku grid
-            _ -> choicePlay grid
-    else do
-        putStrLn "Error: Invalid input"
-        choicePlay grid
+--     input <- getLine
+--     if checkInputChoicePlay input then
+--         case input of
+--             "p" -> runSudoku grid
+--             "s" -> solveSudoku grid
+--             _ -> choicePlay grid
+--     else do
+--         putStrLn "Error: Invalid input"
+--         choicePlay grid
 
 
 main :: IO ()

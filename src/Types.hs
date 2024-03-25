@@ -8,6 +8,7 @@ type Grid = [Row]
 
 data GameState = GameState { 
         gameStateGrid :: Grid,
+        startPossitions :: [(Int, Int)],
         mousePossition :: (Float, Float),
         coordinates :: Maybe (Int, Int)
     } deriving Show
