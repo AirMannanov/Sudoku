@@ -52,10 +52,9 @@ choiceLvl = do
 main :: IO ()
 main = do
 
-    grid <- choiceLvl
+    -- grid <- choiceLvl
 
-    putStrLn "Your field"
-    interface grid
+    interface
     -- printGrid grid
 
     -- choicePlay grid

@@ -1,4 +1,4 @@
-module Types (Cell, Row, Grid, GameState(..))
+module Types (Cell, Row, Grid, GameState(..), GameParametrs(..))
     where
 
 
@@ -6,9 +6,14 @@ type Cell = Maybe Int
 type Row = [Cell]
 type Grid = [Row]
 
-data GameState = GameState { 
+data GameParametrs = GameParametrs {
         gameStateGrid :: Grid,
         startPossitions :: [(Int, Int)],
         mousePossition :: (Float, Float),
         coordinates :: Maybe (Int, Int)
-    } deriving Show
+}
+
+data GameState = GameState { 
+        gameState :: Int,
+        gameParametrs :: Maybe GameParametrs
+    }
