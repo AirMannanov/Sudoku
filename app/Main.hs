@@ -1,7 +1,7 @@
 module Main (main) where
 
 
-import Interface (interface)
+import Interface (runGame)
 
 main :: IO ()
-main = interface
+main = runGame

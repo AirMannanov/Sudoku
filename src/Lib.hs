@@ -4,7 +4,8 @@ module Lib (
     fillCell,
     checkCell,
     checkCellIsNothing,
-    checkEndGame
+    checkEndGame,
+    checkCellPaste
     ) where
 
 
@@ -13,7 +14,7 @@ import Data.List (sort)
 import Data.Char (digitToInt)
 import Data.Maybe (catMaybes, isNothing)
 import System.IO.Unsafe ( unsafePerformIO )
-import Types
+import Types ( Cell, Grid, Row )
 
 
 
@@ -21,11 +22,8 @@ splitField :: String -> [[String]]
 splitField field = map words $ lines field
 
 setMaybes :: [[String]] -> Grid
-setMaybes = map setRow
+setMaybes = map (map setCell)
     where
-        setRow :: [String] -> Row
-        setRow = map setCell
-
         setCell :: String -> Cell
         setCell sym
             | sym == "." = Nothing
@@ -61,6 +59,16 @@ checkCell grid (i, j) =
         where
             num = grid !! i !! j
 
+checkCellPaste :: Grid -> (Int, Int) -> Int -> Bool
+checkCellPaste grid (i, j) num =
+    checkCellIsNothing grid (i, j) &&
+    notElement (getRow grid i) &&
+    notElement (getColumn grid j) &&
+    notElement (getSquare grid (i, j))
+    where
+        notElement :: Row -> Bool
+        notElement line = notElem num $ catMaybes line
+
 fillCell :: Grid -> (Int, Int) -> Int -> Grid
 fillCell grid (i, j) num =
     take i grid ++
@@ -73,14 +81,14 @@ deleteCell grid (i, j) =
     [take j (grid !! i) ++ [Nothing] ++ drop (j + 1) (grid !!  i)] ++
     drop (i + 1) grid
 
-hasAllElemnt :: Row -> Bool
-hasAllElemnt list = sort (catMaybes list) == [1..9]
-
 checkEndGame :: Grid -> Bool
 checkEndGame grid =
     all hasAllElemnt grid &&
     all (hasAllElemnt . getColumn grid) [0..8] &&
     all (hasAllElemnt . getSquare grid) ([(i, j) | i <- [0, 3, 6], j <- [0, 3, 6]])
+    where
+        hasAllElemnt :: Row -> Bool
+        hasAllElemnt list = sort (catMaybes list) == [1..9]
 
 -- getNothingCell :: Grid -> [(Int, Int)]
 -- getNothingCell grid = map snd $ filter fst $ zip bools arr
