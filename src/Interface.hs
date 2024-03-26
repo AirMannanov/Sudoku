@@ -6,7 +6,13 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Const ( window, background, steps )
 import Types ( Grid, Row, GameState(..), GameParametrs(..) )
-import Lib ( fillCell, deleteCell, checkCell )
+import Lib (
+    fillCell,
+    deleteCell,
+    checkCell,
+    setSudoku,
+    checkCellIsNothing,
+    checkEndGame )
 
 
 
@@ -74,10 +80,11 @@ drawButtonsNums =
   zipWith (\(x, y) z -> translate x (y - 1) $ scale 2.8 2.8 $ drawNumber z) [(x, y) | y <- [5, -117, -239], x <- [219, 341, 463]] [1..] ++
   [translate x y $ rectangleWire 118 118 | x <- [255, 377, 499], y <- [54, - 68, - 190]]
 
-chosenCell :: (Int, Int) -> [Picture]
-chosenCell coords = [translate x y $ color yellow $ rectangleSolid 77 77]
+chosenCell :: Maybe (Int, Int) -> [Picture]
+chosenCell (Just coords) = [translate x y $ color yellow $ rectangleSolid 77 77]
     where
         (x, y) = coords2Point coords
+chosenCell Nothing = []
 
 drawStartCell :: [(Int, Int)] -> [Picture]
 drawStartCell = map ((\ (x, y) -> translate x y $ color (greyN 0.5) $ rectangleSolid 77 77) . coords2Point)
@@ -95,17 +102,37 @@ drawStartCreen = pictures $
         translate (-110) (-155) $ scale 0.6 0.6 $ text "Middle",
         translate (-85) (-280) $ scale 0.6 0.6 $ text "Hard"
     ] ++
-    (\x -> [translate 0 2 x, translate 0 (-2) x, translate 2 0 x, translate (-2) 0 x]) 
+    (\x -> [translate 0 2 x, translate 0 (-2) x, translate 2 0 x, translate (-2) 0 x])
     (translate (-475) 150 $ scale 0.6 0.6 $ text "Choose the difficulty level")
 
 
+drawEndGame :: Grid -> [Picture]
+drawEndGame grid
+    | checkEndGame grid = 
+        (\x -> [x, translate 0 1 x, translate 0 (-1) x, translate 1 0 x, translate (-1) 0 x])
+        (translate 200 260 $ scale 0.3 0.3 $ text "The game is over")
+    | otherwise = []
+
+drawRestart :: [Picture]
+drawRestart = 
+        [            
+            translate 377 175 $ rectangleWire 364 88,
+            translate 377 175 $ rectangleWire 370 96
+        ] ++
+        (\x -> [x, translate 0 1 x, translate 0 (-1) x, translate 1 0 x, translate (-1) 0 x]) 
+        (translate 208 155 $ scale 0.5 0.5 $ text "New game")
+
 drawing :: GameState -> Picture
-drawing (GameState 1 (Just (GameParametrs grid startPoss _ Nothing))) =
-    pictures $ drawStartCell startPoss ++ drawingGrid ++ drawingField grid ++ drawButtonsNums
-drawing (GameState 1 (Just (GameParametrs grid startPoss _ (Just coords)))) =
-    pictures $ drawStartCell startPoss ++ chosenCell coords ++ drawingGrid ++ drawingField grid ++ drawButtonsNums
-drawing (GameState 0 _) = drawStartCreen
-drawing (GameState _ _) = text "in development"
+drawing (GameState 1 (Just (GameParametrs grid startPoss coords)) _) = pictures $
+    drawStartCell startPoss ++
+    chosenCell coords ++
+    drawingGrid ++
+    drawingField grid ++
+    drawButtonsNums ++
+    drawRestart ++
+    drawEndGame grid
+drawing (GameState 0 _ _) = drawStartCreen
+drawing (GameState {}) = text "in development"
 
 
 point2Coords :: Point -> (Int, Int)
@@ -115,15 +142,32 @@ coords2Point :: (Int, Int) -> Point
 coords2Point (y, x) = (78 * fromIntegral x - 512, -(78 * fromIntegral y - 311))
 
 
--- setGameParameters :: Grid -> GameState
--- setGameParameters grid = GameState grid getStartPossition (0, 0) Nothing
---     where
---         getStartPossition :: [(Int, Int)]
---         getStartPossition = filter (not . checkCellIsNothing grid) [(i, j) | i <- [0..8], j <- [0..8]]
 
 
 zeroState :: GameState
-zeroState = GameState 0 Nothing
+zeroState = GameState 0 Nothing (0, 0)
+
+
+setGameParameters :: Grid -> GameParametrs
+setGameParameters grid = GameParametrs grid getStartPossition Nothing
+    where
+        getStartPossition :: [(Int, Int)]
+        getStartPossition = filter (not . checkCellIsNothing grid) [(i, j) | i <- [0..8], j <- [0..8]]
+
+
+clickIntStartScreen :: Point -> GameState
+clickIntStartScreen (x, y)
+    | (abs x < 250) && (abs y < 50) =
+        shellGameStart 1 $ Just $ setGameParameters $ setSudoku "field/Field_simple.txt"
+    | (abs x < 250) && (abs (y + 125) < 50) =
+        shellGameStart 1 $ Just $ setGameParameters $ setSudoku "field/Field_middle.txt"
+    | (abs x < 250) && (abs (y + 250) < 50) =
+        shellGameStart 1 $ Just $ setGameParameters $ setSudoku "field/Field_hard.txt"
+    | otherwise = shellGameStart 0 Nothing
+    where
+        shellGameStart :: Int -> Maybe GameParametrs -> GameState
+        shellGameStart 1 gameParams = GameState 1 gameParams (x, y)
+        shellGameStart _ _ = GameState 0 Nothing (x, y)
 
 getCoordsCell :: [(Int, Int)] -> Point -> Maybe (Int, Int)
 getCoordsCell startCoords (x, y) =
@@ -134,12 +178,14 @@ getCoordsCell startCoords (x, y) =
 
 clickInGame :: Grid -> [(Int, Int)] -> Point -> Maybe (Int, Int) -> GameState
 clickInGame grid startPoss (x, y) Nothing
+    | (abs (x - 377) < 182) && (abs (y - 175) < 44) = GameState 0 Nothing (x, y)
     | (-551 < x) && (x < 151) && (abs y < 351) = shellGameState $ getCoordsCell startPoss (x, y)
     | otherwise = shellGameState Nothing
     where
         shellGameState :: Maybe (Int, Int) -> GameState
-        shellGameState point = GameState 1 $ Just $ GameParametrs grid startPoss (x, y) point
+        shellGameState point = GameState 1 (Just $ GameParametrs grid startPoss point) (x, y)
 clickInGame grid startPoss (x, y) (Just point)
+    | (abs (x - 377) < 182) && (abs (y - 175) < 44) = GameState 0 Nothing (x, y)
     | (-551 < x) && (x < 151) && (abs y < 351) = shellGameState grid $ getCoordsCell startPoss (x, y)
     | (abs (x - 255) < 59)  && (abs (y - 54) < 59)  = shellGameState (fillCell grid point 1) $ Just point
     | (abs (x - 377) < 59)  && (abs (y - 54) < 59)  = shellGameState (fillCell grid point 2) $ Just point
@@ -154,12 +200,12 @@ clickInGame grid startPoss (x, y) (Just point)
     | otherwise = shellGameState grid $ Just point
     where
         shellGameState :: Grid -> Maybe (Int, Int) -> GameState
-        shellGameState newGrid newPoint = GameState 1 $ Just $ GameParametrs newGrid startPoss (x, y) newPoint
+        shellGameState newGrid newPoint = GameState 1 (Just $ GameParametrs newGrid startPoss newPoint) (x, y)
 
 event :: Event -> GameState -> GameState
-event (EventMotion possition) (GameState 1 (Just gameParams)) =
-    GameState 1 (Just $ gameParams {mousePossition = possition})
-event (EventKey (MouseButton LeftButton) Down _ possition) (GameState 1 (Just (GameParametrs grid startPoss _ coords))) =
+event (EventMotion possition) gState = gState {mousePossition = possition}
+event (EventKey (MouseButton LeftButton) Down _ possition) (GameState 0 _ _) = clickIntStartScreen possition
+event (EventKey (MouseButton LeftButton) Down _ possition) (GameState 1 (Just (GameParametrs grid startPoss coords) ) _) =
     clickInGame grid startPoss possition coords
 event _ gState = gState
 
