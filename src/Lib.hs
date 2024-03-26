@@ -5,7 +5,8 @@ module Lib (
     checkCell,
     checkCellIsNothing,
     checkEndGame,
-    checkCellPaste
+    checkCellPaste,
+    solveSudoku
     ) where
 
 
@@ -90,24 +91,28 @@ checkEndGame grid =
         hasAllElemnt :: Row -> Bool
         hasAllElemnt list = sort (catMaybes list) == [1..9]
 
--- getNothingCell :: Grid -> [(Int, Int)]
--- getNothingCell grid = map snd $ filter fst $ zip bools arr
---     where
---         arr = [(i, j) | i <- [0..8], j <- [0..8]]
---         bools = map (checkCellIsNothing grid) arr
+getNothingCell :: Grid -> [(Int, Int)]
+getNothingCell grid = map snd $ filter fst $ zip bools arr
+    where
+        arr = [(i, j) | i <- [0..8], j <- [0..8]]
+        bools = map (checkCellIsNothing grid) arr
 
--- getAllowedNumbers :: Grid -> [((Int, Int), [Int])]
--- getAllowedNumbers grid = zip coords $ map getAllowedNumbersCoord coords
---     where
---         coords = getNothingCell grid
---         getAllowedNumbersCoord :: (Int, Int) -> [Int]
---         getAllowedNumbersCoord coord = filter (checkCellPaste grid coord) [1..9]
+getAllowedNumbers :: Grid -> [((Int, Int), [Int])]
+getAllowedNumbers grid = zip coords $ map getAllowedNumbersCoord coords
+    where
+        coords = getNothingCell grid
+        getAllowedNumbersCoord :: (Int, Int) -> [Int]
+        getAllowedNumbersCoord coord = filter (checkCellPaste grid coord) [1..9]
 
--- stepOfSolveSudoku :: Grid -> [((Int, Int), [Int])] -> (Grid, Bool)
--- stepOfSolveSudoku grid [] = (grid, True)
--- stepOfSolveSudoku grid ((_, []): _) = (grid, False)
--- stepOfSolveSudoku grid (((i, j), num: nums): xs) =
---     let suppGrid = fillCell grid (i, j) num
---     in case stepOfSolveSudoku suppGrid $ getAllowedNumbers suppGrid of
---         (_, False) -> stepOfSolveSudoku grid (((i, j), nums): xs)
---         cort -> cort
+stepOfSolveSudoku :: [Grid] -> [((Int, Int), [Int])] -> ([Grid], Bool)
+stepOfSolveSudoku [] _ = ([], False)
+stepOfSolveSudoku grids [] = (grids, True)
+stepOfSolveSudoku grids ((_, []): _) = (grids, False)
+stepOfSolveSudoku (grid:grids) (((i, j), num: nums): xs) =
+    let suppGrid = fillCell grid (i, j) num
+    in case stepOfSolveSudoku (suppGrid:grid:grids) $ getAllowedNumbers suppGrid of
+        (_, False) -> stepOfSolveSudoku (grid:grids) (((i, j), nums): xs)
+        cort -> cort
+
+solveSudoku :: Grid -> [Grid]
+solveSudoku grid = fst $ stepOfSolveSudoku [grid] $ getAllowedNumbers grid
