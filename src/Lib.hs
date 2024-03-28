@@ -6,13 +6,13 @@ module Lib (
     checkEndGame,
     checkCellPaste,
     solveSudoku,
+    getFiledCells,
     getCountSolveSudoku
     ) where
 
 
 
 import Data.List (sort)
-import Data.Char (digitToInt)
 import Data.Maybe (catMaybes, isNothing)
 import System.IO.Unsafe ( unsafePerformIO )
 import Types ( Cell, Grid, Row )
@@ -109,6 +109,10 @@ stepOfSolveSudoku (grid:grids) (((i, j), num: nums): xs) =
 
 solveSudoku :: Grid -> [Grid]
 solveSudoku grid = fst $ stepOfSolveSudoku [grid] $ getAllowedNumbers grid
+
+
+getFiledCells :: Grid -> [(Int, Int)]
+getFiledCells grid = filter (\coords -> not $ checkCellIsNothing grid coords) [(i, j) | i <- [0..8], j <- [0..8]]
 
 
 stepOfSolveSudokuCount :: Grid -> [((Int, Int), [Int])] -> Int -> (Grid, Bool, Int)

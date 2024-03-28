@@ -3,8 +3,10 @@ module SudokuGrid ( getSudoku )
 
 import Types (Grid)
 import Data.List (transpose, foldl')
-import System.Random ( newStdGen, Random(randomR, randomRs), StdGen )
-import Lib ( checkCellIsNothing, deleteCell, getCountSolveSudoku)
+import System.Random
+import System.Random.Shuffle
+import System.IO.Unsafe ( unsafePerformIO )
+import Lib ( checkCellIsNothing, deleteCell, getCountSolveSudoku, getFiledCells )
 
 
 
@@ -106,14 +108,19 @@ transformGrid :: StdGen -> Grid -> Grid
 transformGrid gen grid = snd $ foldl' (\(g, newGen) _ -> applyRandomFunction g newGen) (gen, grid) [1..50]
 
 
+deleteCellSupp :: [(Int, Int)] -> Grid -> Grid
+deleteCellSupp [] grid = grid
+deleteCellSupp (coord:coords) grid
+    | getCountSolveSudoku (deleteCell grid coord) == 1 = deleteCell grid coord
+    | otherwise = deleteCellSupp coords grid
+
+
 deleteRandomCell :: StdGen -> Grid -> (StdGen, Grid)
-deleteRandomCell gen grid
-    | not (checkCellIsNothing grid (i, j)) &&
-      getCountSolveSudoku (deleteCell grid (i, j)) == 1 = (newGen, deleteCell grid (i, j))
-    | otherwise = deleteRandomCell newGen grid
+deleteRandomCell gen grid = (gen1, deleteCellSupp filedCells grid)
     where
-        (i, gen1) = randomR (0, 8) gen :: (Int, StdGen)
-        (j, newGen) = randomR (0, 8) gen1 :: (Int, StdGen)
+        list = getFiledCells grid
+        filedCells = shuffle' list (length list) gen
+        (_, gen1) = randomR (0, length filedCells) gen :: (Int, StdGen)
 
 
 deleteRandomCells :: StdGen -> Grid -> Int -> Grid
@@ -128,4 +135,5 @@ getSudoku lvl = do
             2 -> deleteRandomCells gen transformedGrid 55
             1 -> deleteRandomCells gen transformedGrid 49
             _ -> deleteRandomCells gen transformedGrid 45
+       
     return finalGrid
