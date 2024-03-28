@@ -4,13 +4,14 @@ module Interface (runGame)
 import Data.Maybe (catMaybes, isJust)
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
+import System.IO.Unsafe ( unsafePerformIO )
 import Const ( window, background, steps )
 import Types ( Grid, Row, GameState(..), GameParametrs(..), GameSlider(..) )
+import SudokuGrid ( getSudoku )
 import Lib (
     fillCell,
     deleteCell,
     checkCell,
-    setSudoku,
     checkCellIsNothing,
     checkCellPaste,
     checkEndGame,
@@ -118,8 +119,8 @@ drawStartCreen = pictures $
         rectangleWire 500 100,
         translate 0 (-125) $ rectangleWire 500 100,
         translate 0 (-250) $ rectangleWire 500 100,
-        translate (-120) (-25) $ scale 0.6 0.6 $ text "Simple",
-        translate (-110) (-155) $ scale 0.6 0.6 $ text "Middle",
+        translate (-110) (-25) $ scale 0.6 0.6 $ text "Simple",
+        translate (-130) (-155) $ scale 0.6 0.6 $ text "Medium",
         translate (-85) (-280) $ scale 0.6 0.6 $ text "Hard"
     ] ++
     (\x -> [translate 0 2 x, translate 0 (-2) x, translate 2 0 x, translate (-2) 0 x])
@@ -194,11 +195,11 @@ zeroState = GameState 0 Nothing (0, 0) Nothing
 clickInStartScreen :: Point -> GameState
 clickInStartScreen (x, y)
     | (abs x < 250) && (abs y < 50) =
-        shellGameStart $ Just $ setSudoku "field/Field_simple.txt"
+        shellGameStart $ Just $ unsafePerformIO $ getSudoku 0
     | (abs x < 250) && (abs (y + 125) < 50) =
-        shellGameStart $ Just $ setSudoku "field/Field_middle.txt"
+        shellGameStart $ Just $ unsafePerformIO $ getSudoku 1
     | (abs x < 250) && (abs (y + 250) < 50) =
-        shellGameStart $ Just $ setSudoku "field/Field_hard.txt"
+        shellGameStart $ Just $ unsafePerformIO $ getSudoku 2
     | otherwise = shellGameStart Nothing
     where
         shellGameStart :: Maybe Grid -> GameState

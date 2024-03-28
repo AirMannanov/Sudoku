@@ -28,6 +28,7 @@ library
       Const
       Interface
       Lib
+      SudokuGrid
       Types
   other-modules:
       Paths_sudoku_project
@@ -39,6 +40,8 @@ library
   build-depends:
       base >=4.7 && <5
     , gloss
+    , random
+    , time
   default-language: Haskell2010
 
 executable sudoku-project-exe
@@ -53,7 +56,9 @@ executable sudoku-project-exe
   build-depends:
       base >=4.7 && <5
     , gloss
+    , random
     , sudoku-project
+    , time
   default-language: Haskell2010
 
 test-suite sudoku-project-test
@@ -69,5 +74,7 @@ test-suite sudoku-project-test
   build-depends:
       base >=4.7 && <5
     , gloss
+    , random
     , sudoku-project
+    , time
   default-language: Haskell2010
