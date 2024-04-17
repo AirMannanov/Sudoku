@@ -14,8 +14,7 @@ module Lib (
 
 import Data.List (sort)
 import Data.Maybe (catMaybes, isNothing)
-import System.IO.Unsafe ( unsafePerformIO )
-import Types ( Cell, Grid, Row )
+import Types ( Grid, Row )
 
 
 

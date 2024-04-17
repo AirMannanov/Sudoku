@@ -5,8 +5,7 @@ import Types (Grid)
 import Data.List (transpose, foldl')
 import System.Random
 import System.Random.Shuffle
-import System.IO.Unsafe ( unsafePerformIO )
-import Lib ( checkCellIsNothing, deleteCell, getCountSolveSudoku, getFiledCells )
+import Lib ( deleteCell, getCountSolveSudoku, getFiledCells )
 
 
 
@@ -105,7 +104,7 @@ applyRandomFunction gen grid =
 
 
 transformGrid :: StdGen -> Grid -> Grid
-transformGrid gen grid = snd $ foldl' (\(g, newGen) _ -> applyRandomFunction g newGen) (gen, grid) [1..50]
+transformGrid gen grid = snd $ foldl (\(g, newGen) _ -> applyRandomFunction g newGen) (gen, grid) ([1..50] :: [Integer])
 
 
 deleteCellSupp :: [(Int, Int)] -> Grid -> Grid
